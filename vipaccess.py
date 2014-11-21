@@ -31,6 +31,7 @@ import requests
 from Crypto.Cipher import AES
 from lxml import etree
 from oath import totp
+from oath import hotp
 
 
 PROVISIONING_URL = 'https://services.vip.symantec.com/prov'
@@ -75,7 +76,8 @@ def generate_request(**request_parameters):
         )
     request_parameters['token_model'] = request_parameters.get(
         'token_model',
-        'VSST'
+#        'VSST'
+        'VSMB'
         )
     request_parameters['otp_algorithm'] = request_parameters.get(
         'otp_algorithm',
@@ -211,15 +213,19 @@ def decrypt_key(token_iv, token_cipher):
 def generate_otp_uri(token_id, secret):
     '''Generate the OTP URI.'''
     token_parameters = {}
-    token_parameters['otp_type'] = urllib.quote('totp')
-    token_parameters['app_name'] = urllib.quote('VIP Access')
-    token_parameters['account_name'] = urllib.quote(token_id)
-    token_parameters['parameters'] = urllib.urlencode(
-        dict(
+    param = dict(
             secret=base64.b32encode(secret).upper(),
             issuer='Symantec'
             )
-        )
+    if token_id.startswith('VSMB'):
+        param['count'] = '2'
+        token_parameters['otp_type'] = urllib.quote('hotp')
+    else:
+        token_parameters['otp_type'] = urllib.quote('totp')
+    token_parameters['app_name'] = urllib.quote('VIP Access')
+    token_parameters['account_name'] = urllib.quote(token_id)
+
+    token_parameters['parameters'] = urllib.urlencode(param)
 
     return 'otpauth://%(otp_type)s/%(app_name)s:%(account_name)s?%(parameters)s' % token_parameters
 
@@ -238,7 +244,10 @@ def generate_qr_code(uri):
 
 def check_token(token_id, secret):
     '''Check the validity of the generated token.'''
-    otp = totp(binascii.b2a_hex(secret))
+    if token_id.startswith('VSMB'):
+        otp = hotp(binascii.b2a_hex(secret),1)
+    else:
+        otp = totp(binascii.b2a_hex(secret))
     test_url = 'https://idprotect.vip.symantec.com/testtoken.v'
     token_check = requests.post(
         test_url,
@@ -257,6 +266,7 @@ if __name__ == "__main__":
     request = generate_request()
 
     response = requests.post(PROVISIONING_URL, data=request)
+    sys.stderr.write(response.content)
 
     otp_token = get_token_from_response(response.content)
 
