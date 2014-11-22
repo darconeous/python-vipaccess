@@ -76,7 +76,7 @@ def generate_request(**request_parameters):
         )
     request_parameters['token_model'] = request_parameters.get(
         'token_model',
-#        'VSST'
+#        'VSMT'
         'VSMB'
         )
     request_parameters['otp_algorithm'] = request_parameters.get(
@@ -264,9 +264,10 @@ def check_token(token_id, secret):
 
 if __name__ == "__main__":
     request = generate_request()
+    print request
 
     response = requests.post(PROVISIONING_URL, data=request)
-    sys.stderr.write(response.content)
+    print response.content
 
     otp_token = get_token_from_response(response.content)
 
