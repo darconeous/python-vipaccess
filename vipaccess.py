@@ -48,7 +48,7 @@ REQUEST_TEMPLATE = '''<?xml version="1.0" encoding="UTF-8" ?>
     <ActivationCode></ActivationCode>
     <OtpAlgorithm type="%(otp_algorithm)s"/>
     <SharedSecretDeliveryMethod>%(shared_secret_delivery_method)s</SharedSecretDeliveryMethod>
-    <DeviceId>
+	<DeviceId>
         <Manufacturer>%(manufacturer)s</Manufacturer>
         <SerialNo>%(serial)s</SerialNo>
         <Model>%(model)s</Model>
@@ -59,10 +59,6 @@ REQUEST_TEMPLATE = '''<?xml version="1.0" encoding="UTF-8" ?>
         <ClientIDType>%(client_id_type)s</ClientIDType>
         <ClientID>%(client_id)s</ClientID>
         <DistChannel>%(dist_channel)s</DistChannel>
-        <ClientInfo>
-            <os>%(os)s</os>
-            <platform>%(platform)s</platform>
-        </ClientInfo>
         <ClientTimestamp>%(timestamp)d</ClientTimestamp>
         <Data>%(data)s</Data>
     </Extension>
@@ -99,29 +95,37 @@ def generate_request(**request_parameters):
         )
     request_parameters['model'] = request_parameters.get(
         'model',
-        'MacBookPro%d,%d' % (random.randint(1, 12), random.randint(1, 4))
+#        'MacBookPro%d,%d' % (random.randint(1, 12), random.randint(1, 4))
+        'iPhone%d,%d' % (random.randint(1, 12), random.randint(1, 4))
         )
     request_parameters['app_handle'] = request_parameters.get(
         'app_handle',
         'iMac010200'
+#        'TZAndroid2.2Test'
         )
     request_parameters['client_id_type'] = request_parameters.get(
         'client_id_type',
-        'BOARDID'
+#        'BOARDID'
+        '1'
         )
     request_parameters['client_id'] = request_parameters.get(
         'client_id',
-        'Mac-' + ''.join([random.choice('0123456789ABCDEF')
+        ''.join([random.choice('0123456789')
             for x in range(0, 16)]
             )
+#        'Mac-' + ''.join([random.choice('0123456789ABCDEF')
+#            for x in range(0, 16)]
+#            )
         )
     request_parameters['dist_channel'] = request_parameters.get(
         'dist_channel',
         'Symantec'
+#        'Android Market'
         )
     request_parameters['platform'] = request_parameters.get(
         'platform',
-        'iMac'
+#        'iMac'
+        'iPhone'
         )
     request_parameters['os'] = request_parameters.get(
         'os',
@@ -280,4 +284,4 @@ if __name__ == "__main__":
     otp_uri = generate_otp_uri(otp_token['id'], otp_secret)
     print otp_uri
 
-    generate_qr_code(otp_uri)
+#    generate_qr_code(otp_uri)
