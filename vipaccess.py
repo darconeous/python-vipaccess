@@ -249,20 +249,32 @@ def generate_qr_code(uri):
 def check_token(token_id, secret):
     '''Check the validity of the generated token.'''
     if token_id.startswith('VSMB'):
-        otp = hotp(binascii.b2a_hex(secret),1)
+        otp = hotp(binascii.b2a_hex(secret),1).encode('utf-8')
     else:
-        otp = totp(binascii.b2a_hex(secret))
-    test_url = 'https://idprotect.vip.symantec.com/testtoken.v'
+        otp = totp(binascii.b2a_hex(secret)).encode('utf-8')
+    test_url = 'https://idprotect.vip.symantec.com/otpCheck'
     token_check = requests.post(
         test_url,
         data=dict(
-            tokenID=token_id,
-            firstOTP=otp
+            cred=token_id,
+            cr1=otp[0],
+            cr2=otp[1],
+            cr3=otp[2],
+            cr4=otp[3],
+            cr5=otp[4],
+            cr6=otp[5],
+            cr7="",
+            count="1",
             )
         )
-    if "Your credential is functioning properly and is ready for use" in token_check.text:
+    if token_check.status_code != 200:
+        sys.stderr.write("Bad token check url, " + token_check.status_code + "\n")
+        return True
+
+    if "Your VIP Credential is working correctly" in token_check.text:
         return True
     else:
+        sys.stderr.write("bad otp \"" + otp + "\" : " + token_check.text + "\n")
         return False
 
 
